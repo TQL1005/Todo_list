@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <group android:checkableBehavior="single">
+        <item
+            android:id="@+id/statistic"
+            android:title="View statistics" />
+        <item
+            android:id="@+id/user_management"
+            android:title="User management" />
+        <item
+            android:id="@+id/Category_management"
+            android:title="Category management" />
+        <item
+            android:id="@+id/Book_management"
+            android:title="Book management" />
+    </group>
+
+    <group android:checkableBehavior="single">
+        <item
+            android:id="@+id/profile"
+            android:title="Profile" />
+        <item
+            android:id="@+id/login"
+            android:title="Log out" />
+    </group>
+
+
+</menu>
