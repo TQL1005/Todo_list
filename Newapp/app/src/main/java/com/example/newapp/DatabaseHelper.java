@@ -28,10 +28,10 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         sqLiteDatabase.execSQL("CREATE TABLE users (ID INTEGER PRIMARY KEY AUTOINCREMENT, username TEXT, password TEXT, role INTEGER, phone INTEGER,isDeleted boolean DEFAULT 0 )");
 
         // Create the "destinations" table
-        sqLiteDatabase.execSQL("CREATE TABLE destinations (ID INTEGER PRIMARY KEY AUTOINCREMENT, destination TEXT, description TEXT, price DOUBLE,isDeleted boolean DEFAULT 0)");
+        sqLiteDatabase.execSQL("CREATE TABLE destinations (ID INTEGER PRIMARY KEY AUTOINCREMENT, destination TEXT, description TEXT, price DOUBLE,pic1 TEXT, pic2 TEXT, pic3 TEXT, pic4 TEXT,isDeleted boolean DEFAULT 0)");
 
         // Create the "tours" table with foreign key constraints
-        sqLiteDatabase.execSQL("CREATE TABLE tours (ID INTEGER PRIMARY KEY AUTOINCREMENT, ID_destination INTEGER, start_date DATE, end_date DATE, amount INTEGER, pic1 TEXT, pic2 TEXT, pic3 TEXT, pic4 TEXT,isDeleted boolean DEFAULT 0 , FOREIGN KEY (ID_destination) REFERENCES destinations(ID))");
+        sqLiteDatabase.execSQL("CREATE TABLE tours (ID INTEGER PRIMARY KEY AUTOINCREMENT, ID_destination INTEGER, start_date DATE, end_date DATE, amount INTEGER, isDeleted boolean DEFAULT 0 , FOREIGN KEY (ID_destination) REFERENCES destinations(ID))");
 
         // Create the "bill" table with foreign key constraints
         sqLiteDatabase.execSQL("CREATE TABLE bill (ID INTEGER PRIMARY KEY AUTOINCREMENT, ID_tours INTEGER, ID_users INTEGER, bill_date DATE, bill_money DATE, amount INTEGER,isDeleted boolean DEFAULT 0, FOREIGN KEY (ID_tours) REFERENCES tours(ID), FOREIGN KEY (ID_users) REFERENCES users(ID))");
@@ -55,6 +55,15 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         contentValues.put("password",password);
         contentValues.put("role",1);
         long result = Databasename.insert("users",null,contentValues);
+        if (result == -1) {return false;}
+        else return true;
+    }
+
+    public boolean changePwd(String password){
+        SQLiteDatabase Databasename = this.getWritableDatabase();
+        ContentValues contentValues = new ContentValues();
+        contentValues.put("password",password);
+        long result = Databasename.update("users",contentValues,"username = ?",new String[]{getUser()});
         if (result == -1) {return false;}
         else return true;
     }
@@ -108,9 +117,22 @@ public class DatabaseHelper extends SQLiteOpenHelper {
             String destination = cursor.getString(cursor.getColumnIndex("destination"));
             String description = cursor.getString(cursor.getColumnIndex("description"));
             Double price = cursor.getDouble(cursor.getColumnIndex("price"));
-            Destination destinationItem = new Destination(destination, description, price);
+            String img = cursor.getString(cursor.getColumnIndex("pic1"));
+            Destination destinationItem = new Destination(destination, description, price,img);
             list.add(destinationItem);
 
+        }
+        return list;
+    }
+
+    public ArrayList<String> getDesName(){
+        SQLiteDatabase db = this.getReadableDatabase();
+        ArrayList<String> list = new ArrayList<>();
+        Cursor cursor = db.rawQuery("select destination from destinations",null);
+        while(cursor.moveToNext()){
+            String destination = cursor.getString(cursor.getColumnIndex("destination"));
+            String destinationItem = new String(destination);
+            list.add(destinationItem);
         }
         return list;
     }
@@ -124,4 +146,253 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         this.user = user;
         System.out.println("User set to: " + this.user);
     }
+
+    public Cursor getAllUsers() {
+        SQLiteDatabase db = this.getWritableDatabase();
+        return db.rawQuery("SELECT * FROM users", null);
+    }
+
+    public Cursor getUserById(int userId) {
+        SQLiteDatabase db = this.getReadableDatabase();
+        return db.rawQuery("SELECT * FROM users WHERE ID = ?", new String[]{String.valueOf(userId)});
+    }
+
+    public boolean updateUser(int userId, String username, String password, String role, String phone) {
+        SQLiteDatabase db = this.getWritableDatabase();
+        String hashedPassword = BCrypt.hashpw(password, BCrypt.gensalt());
+        ContentValues values = new ContentValues();
+        values.put("username", username);
+        values.put("password", hashedPassword);
+        values.put("role", role);
+        values.put("phone", phone);
+        int rowsAffected = db.update("users", values, "ID = ?", new String[]{String.valueOf(userId)});
+        return rowsAffected > 0;
+    }
+
+    public boolean addUser(String username, String password, int role, String phone) {
+        SQLiteDatabase db = this.getWritableDatabase();
+        String hashedPassword = BCrypt.hashpw(password, BCrypt.gensalt());
+        ContentValues values = new ContentValues();
+        values.put("username", username);
+        values.put("password", hashedPassword);
+        values.put("role", role);
+        values.put("phone", phone);
+
+        long result = db.insert("users", null, values);
+        return result != -1;
+    }
+
+    public void deleteUser(int id) {
+        SQLiteDatabase db = getWritableDatabase();
+        db.beginTransaction();
+        try {
+
+            int affectedRows = db.delete("users", "ID = ?", new String[]{String.valueOf(id)});
+            if (affectedRows > 0) {
+                db.setTransactionSuccessful();
+            }
+
+        } catch (Exception e) {
+
+        } finally {
+            db.endTransaction();
+        }
+    }
+
+    public Cursor getAllDestinations() {
+        SQLiteDatabase db = this.getWritableDatabase();
+        return db.rawQuery("SELECT * FROM destinations", null);
+    }
+
+    public Cursor getDestinationById(int destinationId) {
+        SQLiteDatabase db = this.getReadableDatabase();
+        return db.rawQuery("SELECT * FROM destinations WHERE ID = ?", new String[]{String.valueOf(destinationId)});
+    }
+
+    public boolean updateDestination(int destinationId, String destination, String description, double price, String pic1, String pic2, String pic3, String pic4) {
+        SQLiteDatabase db = this.getWritableDatabase();
+        ContentValues values = new ContentValues();
+        values.put("destination", destination);
+        values.put("description", description);
+        values.put("price", price);
+        values.put("pic1", pic1);
+        values.put("pic2", pic2);
+        values.put("pic3", pic3);
+        values.put("pic4", pic4);
+        int rowsAffected = db.update("destinations", values, "ID = ?", new String[]{String.valueOf(destinationId)});
+        return rowsAffected > 0;
+    }
+
+    public boolean addDestination(String destination, String description, double price, String pic1, String pic2, String pic3, String pic4) {
+        SQLiteDatabase db = this.getWritableDatabase();
+        ContentValues values = new ContentValues();
+        values.put("destination", destination);
+        values.put("description", description);
+        values.put("price", price);
+        values.put("pic1", pic1);
+        values.put("pic2", pic2);
+        values.put("pic3", pic3);
+        values.put("pic4", pic4);
+        long result = db.insert("destinations", null, values);
+        return result != -1;
+    }
+
+    public void deleteDestination(int id) {
+        SQLiteDatabase db = getWritableDatabase();
+        db.beginTransaction();
+        try {
+            int affectedRows = db.delete("destinations", "ID = ?", new String[]{String.valueOf(id)});
+            if (affectedRows > 0) {
+                db.setTransactionSuccessful();
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        } finally {
+            db.endTransaction();
+        }
+    }
+
+    public Cursor getAllTours() {
+        SQLiteDatabase db = this.getWritableDatabase();
+        return db.rawQuery("SELECT * FROM tours", null);
+    }
+
+    public Cursor getTourById(int tourId) {
+        SQLiteDatabase db = this.getReadableDatabase();
+        return db.rawQuery("SELECT * FROM tours WHERE ID = ?", new String[]{String.valueOf(tourId)});
+    }
+
+    public boolean updateTour(int tourId, int destinationId, String startDate, String endDate, int amount) {
+        SQLiteDatabase db = this.getWritableDatabase();
+        ContentValues values = new ContentValues();
+        values.put("ID_destination", destinationId);
+        values.put("start_date", startDate);
+        values.put("end_date", endDate);
+        values.put("amount", amount);
+        int rowsAffected = db.update("tours", values, "ID = ?", new String[]{String.valueOf(tourId)});
+        return rowsAffected > 0;
+    }
+
+    public boolean addTour(int destinationId, String startDate, String endDate, int amount) {
+        SQLiteDatabase db = this.getWritableDatabase();
+        ContentValues values = new ContentValues();
+        values.put("ID_destination", destinationId);
+        values.put("start_date", startDate);
+        values.put("end_date", endDate);
+        values.put("amount", amount);
+        long result = db.insert("tours", null, values);
+        return result != -1;
+    }
+
+    public void deleteTour(int id) {
+        SQLiteDatabase db = getWritableDatabase();
+        db.beginTransaction();
+        try {
+            int affectedRows = db.delete("tours", "ID = ?", new String[]{String.valueOf(id)});
+            if (affectedRows > 0) {
+                db.setTransactionSuccessful();
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        } finally {
+            db.endTransaction();
+        }
+    }
+
+    public Cursor getAllBills() {
+        SQLiteDatabase db = this.getWritableDatabase();
+        return db.rawQuery("SELECT * FROM bill", null);
+    }
+
+    public Cursor getBillById(int billId) {
+        SQLiteDatabase db = this.getReadableDatabase();
+        return db.rawQuery("SELECT * FROM bill WHERE ID = ?", new String[]{String.valueOf(billId)});
+    }
+
+    public boolean updateBill(int billId, int tourId, int userId, String billDate, String billMoney, int amount) {
+        SQLiteDatabase db = this.getWritableDatabase();
+        ContentValues values = new ContentValues();
+        values.put("ID_tours", tourId);
+        values.put("ID_users", userId);
+        values.put("bill_date", billDate);
+        values.put("bill_money", billMoney);
+        values.put("amount", amount);
+        int rowsAffected = db.update("bill", values, "ID = ?", new String[]{String.valueOf(billId)});
+        return rowsAffected > 0;
+    }
+
+    public boolean addBill(int tourId, int userId, String billDate, String billMoney, int amount) {
+        SQLiteDatabase db = this.getWritableDatabase();
+        ContentValues values = new ContentValues();
+        values.put("ID_tours", tourId);
+        values.put("ID_users", userId);
+        values.put("bill_date", billDate);
+        values.put("bill_money", billMoney);
+        values.put("amount", amount);
+        long result = db.insert("bill", null, values);
+        return result != -1;
+    }
+
+    public void deleteBill(int id) {
+        SQLiteDatabase db = getWritableDatabase();
+        db.beginTransaction();
+        try {
+            int affectedRows = db.delete("bill", "ID = ?", new String[]{String.valueOf(id)});
+            if (affectedRows > 0) {
+                db.setTransactionSuccessful();
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        } finally {
+            db.endTransaction();
+        }
+    }
+
+    public Cursor getAllFeedbacks() {
+        SQLiteDatabase db = this.getWritableDatabase();
+        return db.rawQuery("SELECT * FROM feedback", null);
+    }
+
+    public Cursor getFeedbackById(int feedbackId) {
+        SQLiteDatabase db = this.getReadableDatabase();
+        return db.rawQuery("SELECT * FROM feedback WHERE ID = ?", new String[]{String.valueOf(feedbackId)});
+    }
+
+    public boolean updateFeedback(int feedbackId, int userId, int destinationId, String feedback, String dateFeedback) {
+        SQLiteDatabase db = this.getWritableDatabase();
+        ContentValues values = new ContentValues();
+        values.put("ID_users", userId);
+        values.put("ID_destination", destinationId);
+        values.put("feedback", feedback);
+        values.put("date_feedback", dateFeedback);
+        int rowsAffected = db.update("feedback", values, "ID = ?", new String[]{String.valueOf(feedbackId)});
+        return rowsAffected > 0;
+    }
+
+    public boolean addFeedback(int userId, int destinationId, String feedback, String dateFeedback) {
+        SQLiteDatabase db = this.getWritableDatabase();
+        ContentValues values = new ContentValues();
+        values.put("ID_users", userId);
+        values.put("ID_destination", destinationId);
+        values.put("feedback", feedback);
+        values.put("date_feedback", dateFeedback);
+        long result = db.insert("feedback", null, values);
+        return result != -1;
+    }
+
+    public void deleteFeedback(int id) {
+        SQLiteDatabase db = getWritableDatabase();
+        db.beginTransaction();
+        try {
+            int affectedRows = db.delete("feedback", "ID = ?", new String[]{String.valueOf(id)});
+            if (affectedRows > 0) {
+                db.setTransactionSuccessful();
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        } finally {
+            db.endTransaction();
+        }
+    }
+
 }

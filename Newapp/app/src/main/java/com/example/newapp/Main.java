@@ -2,13 +2,25 @@ package com.example.newapp;
 
 import androidx.appcompat.app.AppCompatActivity;
 
+import android.content.Intent;
 import android.os.Bundle;
 
+import android.view.View;
+import android.widget.ImageView;
 import android.widget.ListView;
+import android.widget.RelativeLayout;
+import android.widget.SearchView;
+
+import com.bumptech.glide.Glide;
+import com.cloudinary.android.MediaManager;
 
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Map;
 
 public class Main extends AppCompatActivity {
+    private static Integer temp = 0;
+    SearchView searchBar;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         getSupportActionBar().hide();
@@ -21,6 +33,13 @@ public class Main extends AppCompatActivity {
         DesAdapter desAdapter = new DesAdapter(this,R.layout.list_item,arrayList);
         listView.setAdapter(desAdapter);
 
-
-    }
+        searchBar = findViewById(R.id.Start);
+        searchBar.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Intent intent = new Intent(Main.this,Tour_List.class);
+                startActivity(intent);
+            }
+        });
+       }
 }

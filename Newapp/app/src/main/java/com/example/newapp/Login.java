@@ -38,11 +38,14 @@ public class Login extends AppCompatActivity {
             public void onClick(View v) {
                 boolean isLoggin = dbHelper.checkUser(eUsername.getText().toString(),ePwd.getText().toString());
                 if (isLoggin){
-                    Intent intent = new Intent(Login.this,Main.class);
 //                    Intent intent = new Intent(Login.this,Profile.class);
-                    startActivity(intent);
+//                    intent.putExtra("username",eUsername.getText().toString());
+//                    Login.this.startActivity(intent);
+
+                    Intent intent = new Intent(Login.this,Main.class);
+                    Login.this.startActivity(intent);
                 }else{
-                    Toast.makeText(Login.this,"Login failed",Toast.LENGTH_LONG).show();
+                    Toast.makeText(Login.this,"Username or Password does not match",Toast.LENGTH_LONG).show();
                 }
             }
         });
